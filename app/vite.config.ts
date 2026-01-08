@@ -5,6 +5,9 @@ import dns from "node:dns";
 dns.setDefaultResultOrder("verbatim");
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    outDir: "../api/dist/",
+  },
   plugins: [
     react({
       babel: {

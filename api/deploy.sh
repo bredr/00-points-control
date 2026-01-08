@@ -14,4 +14,6 @@ readonly TARGET_CONFIG_PATH=${TARGET_PATH}config.yaml
 
 cargo zigbuild --target ${TARGET} --release
 rsync -a ${SOURCE_PATH} ${TARGET_HOST}:${TARGET_PATH}
+(cd ../app && npm run build)
+rsync -a ./dist ${TARGET_HOST}:${TARGET_PATH}
 rsync ${SOURCE_CONFIG_PATH} ${TARGET_HOST}:${TARGET_CONFIG_PATH}

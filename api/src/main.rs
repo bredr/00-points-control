@@ -9,8 +9,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::net::TcpListener;
-use tower::ServiceBuilder;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::{ServeDir, ServeFile};
 
 mod config;
 mod router;
@@ -62,17 +61,18 @@ async fn main() {
         }
         point_state.set_point(id.clone(), is_straight.clone());
     }
-    let cors_layer = CorsLayer::new().allow_origin(Any); // Open access to selected route
+
+    let serve_dir = ServeDir::new("dist").not_found_service(ServeFile::new("dist/index.html"));
     let app = Router::new()
         .route("/api/points", get(handlers::get_points_state))
         .route("/api/point", put(handlers::put_point_state))
         .route("/api/point/{id}", get(handlers::get_point_state))
+        .fallback_service(serve_dir)
         .with_state(state::AppState {
             point_state,
             pwm: shared_pwm,
             config: loaded_config.to_lookup(),
-        })
-        .layer(ServiceBuilder::new().layer(cors_layer));
+        });
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::info!("Server running on http://localhost:3000");

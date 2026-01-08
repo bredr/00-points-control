@@ -40,6 +40,7 @@ pub async fn put_point_state(
         true => angles.straight,
         false => angles.diverging,
     };
+    tracing::debug!("Set point {} angle: {}", params.id, degrees);
 
     match pwm.move_servo(params.id, degrees) {
         Ok(_) => (

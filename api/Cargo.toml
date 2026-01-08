@@ -13,5 +13,5 @@ tracing = "0.1"
 pwm-pca9685 = "0.1"
 linux-embedded-hal = "0.3"
 embedded-hal = "0.2.3"
-tower-http = {version="0.6.8", features=["cors"]}
-tower = "0.5.2"
+tower-http = {version="0.6.8", features=["fs"]}
+tower = {version="0.5.2", features=["util"]}
