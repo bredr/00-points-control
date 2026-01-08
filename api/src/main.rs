@@ -4,15 +4,36 @@ use axum::{
 };
 use linux_embedded_hal::I2cdev;
 use pwm_pca9685::{Pca9685, SlaveAddr};
-use std::sync::{Arc, Mutex};
+use std::{
+    path::Path,
+    sync::{Arc, Mutex},
+};
 use tokio::net::TcpListener;
+use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
+
+mod config;
 mod router;
-use crate::router::handlers;
 use crate::router::state;
+use crate::router::{handlers, servo::ServoControl};
+use std::env;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
+
+    let args: Vec<String> = env::args().collect();
+    let config_path = &args[1];
+
+    let loaded_config = match config::Config::load(Path::new(config_path)) {
+        Err(err) => {
+            tracing::error!("Unable to load config: {:?}", err);
+            panic!("Unable to load config");
+        }
+        Ok(config) => config,
+    };
+
+    tracing::debug!("Config: {:?}", loaded_config);
 
     // 1. Initialize Hardware
     tracing::debug!("Initializing hardware");
@@ -29,13 +50,29 @@ async fn main() {
     let shared_pwm = Arc::new(Mutex::new(pwm));
     let point_state = Arc::new(state::InMemoryPointState::default());
 
+    for (id, is_straight, degrees) in loaded_config.get_defaults() {
+        if let Err(err) = shared_pwm
+            .lock()
+            .expect("Unable to lock pwm")
+            .move_servo(id.clone(), degrees.clone())
+        {
+            tracing::error!("Error initialising point {}: {}", id, err);
+        } else {
+            tracing::debug!("Initialised point {} to {}", id, degrees);
+        }
+        point_state.set_point(id.clone(), is_straight.clone());
+    }
+    let cors_layer = CorsLayer::new().allow_origin(Any); // Open access to selected route
     let app = Router::new()
-        .route("/points", get(handlers::get_point_state))
-        .route("/points", put(handlers::put_point_state))
+        .route("/api/points", get(handlers::get_points_state))
+        .route("/api/point", put(handlers::put_point_state))
+        .route("/api/point/{id}", get(handlers::get_point_state))
         .with_state(state::AppState {
             point_state,
             pwm: shared_pwm,
-        });
+            config: loaded_config.to_lookup(),
+        })
+        .layer(ServiceBuilder::new().layer(cors_layer));
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     tracing::info!("Server running on http://localhost:3000");

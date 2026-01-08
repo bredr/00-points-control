@@ -7,8 +7,11 @@ edition = "2024"
 axum = { version = "0.8.8", features = ["ws", "tracing", "macros"]}
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_yml = "0.0.12"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1"
 pwm-pca9685 = "0.1"
 linux-embedded-hal = "0.3"
 embedded-hal = "0.2.3"
+tower-http = {version="0.6.8", features=["cors"]}
+tower = "0.5.2"
