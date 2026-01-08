@@ -92,8 +92,8 @@ const Point = ({
         >
           {error && <IconExclamationMark />}
           {isLoading && <IconLoader />}
-          {data && data.is_straight && straightIcon}
-          {data && !data.is_straight && divergentIcon}
+          {!error && !isLoading && data && data.is_straight && straightIcon}
+          {!error && !isLoading && data && !data.is_straight && divergentIcon}
         </ActionIcon>
       </foreignObject>
     </>
