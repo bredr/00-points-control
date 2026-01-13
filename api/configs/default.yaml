@@ -1,9 +1,9 @@
 points:
   - id: 0
     angles:
-      straight: 35.0
-      diverging: 145.0
-      default: 35.0
+      straight: 60.0
+      diverging: 135.0
+      default: 60.0
   - id: 1
     angles:
       straight: 37.0
@@ -37,5 +37,5 @@ points:
   - id: 7
     angles:
       straight: 90.0
-      diverging: 10.0
+      diverging: 20.0
       default: 90.0
