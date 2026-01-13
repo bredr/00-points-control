@@ -66,6 +66,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/points", get(handlers::get_points_state))
         .route("/api/point", put(handlers::put_point_state))
+        .route("/api/point/manual", put(handlers::put_point_manual_state))
         .route("/api/point/{id}", get(handlers::get_point_state))
         .fallback_service(serve_dir)
         .with_state(state::AppState {
@@ -74,7 +75,14 @@ async fn main() {
             config: loaded_config.to_lookup(),
         });
 
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    tracing::info!("Server running on http://localhost:3000");
+    let port = match std::env::var("PORT") {
+        Ok(port) => port,
+        Err(_) => "3000".to_string(),
+    };
+
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
+        .await
+        .unwrap();
+    tracing::info!("Server running on http://localhost:{}", port);
     axum::serve(listener, app).await.unwrap();
 }

@@ -19,6 +19,27 @@ pub async fn get_point_state(
     .into_response()
 }
 
+pub async fn put_point_manual_state(
+    State(state): State<state::AppState>,
+    Json(params): Json<models::UpdatePointManualParams>,
+) -> impl IntoResponse {
+    if !servo::valid_channel(params.id) || !state.config.contains_key(&params.id) {
+        return (StatusCode::BAD_REQUEST).into_response();
+    }
+    tracing::debug!("Manually setting point {} to {}", params.id, params.degrees);
+    let mut pwm = state.pwm.lock().unwrap();
+    match pwm.move_servo(params.id, params.degrees) {
+        Ok(_) => (
+            StatusCode::OK,
+            Json(models::PointStateManual {
+                degrees: params.degrees,
+            }),
+        )
+            .into_response(),
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, Json(err)).into_response(),
+    }
+}
+
 pub async fn put_point_state(
     State(state): State<state::AppState>,
     Json(params): Json<models::UpdatePointParams>,

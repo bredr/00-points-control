@@ -7,6 +7,12 @@ pub struct UpdatePointParams {
     pub is_straight: bool,
 }
 
+#[derive(Deserialize)]
+pub struct UpdatePointManualParams {
+    pub id: u8,
+    pub degrees: f32,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct CurrentPointState {
     pub map: HashMap<u8, bool>,
@@ -15,4 +21,9 @@ pub struct CurrentPointState {
 #[derive(Debug, Clone, Serialize)]
 pub struct PointState {
     pub is_straight: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PointStateManual {
+    pub degrees: f32,
 }

@@ -1,4 +1,4 @@
-import { ActionIcon, type MantineGradient } from "@mantine/core";
+import { ActionIcon, Tooltip, type MantineGradient } from "@mantine/core";
 import { IconExclamationMark, IconLoader } from "@tabler/icons-react";
 import { type ReactElement } from "react";
 import useSWR from "swr";
@@ -74,27 +74,29 @@ const Point = ({
         width={40}
         height={40}
       >
-        <ActionIcon
-          variant="gradient"
-          size="md"
-          gradient={gradient ?? { from: "blue", to: "cyan", deg: 90 }}
-          disabled={isLoading || error}
-          onClick={async () => {
-            if (data) {
-              await mutate(
-                updatePoint("/api/point", {
-                  id,
-                  is_straight: !data?.is_straight,
-                }),
-              );
-            }
-          }}
-        >
-          {error && <IconExclamationMark />}
-          {isLoading && <IconLoader />}
-          {!error && !isLoading && data && data.is_straight && straightIcon}
-          {!error && !isLoading && data && !data.is_straight && divergentIcon}
-        </ActionIcon>
+        <Tooltip label={`ID ${id}`}>
+          <ActionIcon
+            variant="gradient"
+            size="md"
+            gradient={gradient ?? { from: "blue", to: "cyan", deg: 90 }}
+            disabled={isLoading || error}
+            onClick={async () => {
+              if (data) {
+                await mutate(
+                  updatePoint("/api/point", {
+                    id,
+                    is_straight: !data?.is_straight,
+                  }),
+                );
+              }
+            }}
+          >
+            {error && <IconExclamationMark />}
+            {isLoading && <IconLoader />}
+            {!error && !isLoading && data && data.is_straight && straightIcon}
+            {!error && !isLoading && data && !data.is_straight && divergentIcon}
+          </ActionIcon>
+        </Tooltip>
       </foreignObject>
     </>
   );

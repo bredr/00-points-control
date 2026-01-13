@@ -2,18 +2,20 @@
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
 
-import { AppShell, Box, MantineProvider, Title } from "@mantine/core";
+import { AppShell, Group, MantineProvider, Title } from "@mantine/core";
 import { theme } from "./theme";
 import Layout from "./components/Layout";
+import Tuner from "./components/Tuner";
 
 export default function App() {
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark">
-      <AppShell padding="lg" header={{ height: 60 }}>
+      <AppShell padding="lg" header={{ height: 70 }}>
         <AppShell.Header withBorder>
-          <Box ml={20} p={5} w="100%">
+          <Group justify="space-between" p="sm">
             <Title order={1}>Model Railway Control</Title>
-          </Box>
+            <Tuner />
+          </Group>
         </AppShell.Header>
         <AppShell.Main p="lg">
           <Layout />
