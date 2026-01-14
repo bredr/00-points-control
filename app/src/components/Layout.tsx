@@ -1,5 +1,6 @@
-import { useRef, useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { Box } from "@mantine/core";
+import { useElementSize } from "@mantine/hooks";
 import Track from "./Track";
 import Point from "./Point";
 import {
@@ -9,118 +10,36 @@ import {
   IconArrowNarrowUp,
 } from "@tabler/icons-react";
 const Layout = () => {
-  const boxRef = useRef(null);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
+  const { ref: sizeRef, width, height } = useElementSize();
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!boxRef.current) {
-      return;
-    }
-    const { width, height } = (
-      boxRef.current as unknown as HTMLHtmlElement
-    ).getBoundingClientRect();
-    setWidth(width);
-    setHeight(height);
-  }, [boxRef]);
-
+  const handleRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node !== null) {
+        // 1. Give the node to Mantine's size tracker
+        (sizeRef as any).current = node;
+        // 2. Save the node to state so Point.tsx can find the Portal target
+        setContainer(node);
+      }
+    },
+    [sizeRef],
+  );
   return (
-    <Box ref={boxRef} mt={100} w="100%" h="80vh">
+    <Box
+      ref={handleRef}
+      mt={100}
+      w="100%"
+      h="80vh"
+      style={{ position: "relative" }}
+    >
       <svg
         width={width}
+        preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
         height={height}
-        viewBox={`0 0 ${width * 0.8} ${height}`}
+        style={{ display: "block" }}
+        viewBox={`0 0 ${width} ${height}`}
       >
-        <Point
-          id={0}
-          x={0.25}
-          y={0.1}
-          buttonPos="below"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowDown />}
-          divergentIcon={<IconArrowNarrowUp />}
-          gradient={{ from: "IndianRed", to: "DarkRed", deg: 180 }}
-        />
-        <Point
-          id={1}
-          x={0.4}
-          y={0.8}
-          buttonPos="below"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowUp />}
-          divergentIcon={<IconArrowNarrowDown />}
-          gradient={{ from: "red", to: "blue", deg: 180 }}
-        />
-        <Point
-          id={2}
-          x={0.5}
-          y={0.8}
-          buttonPos="below"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowDown />}
-          divergentIcon={<IconArrowNarrowUp />}
-          gradient={{ from: "green", to: "red", deg: 180 }}
-        />
-        <Point
-          id={3}
-          x={0.4}
-          y={0.7}
-          buttonPos="below"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowUp />}
-          divergentIcon={<IconArrowNarrowDown />}
-          gradient={{ from: "green", to: "red", deg: 180 }}
-        />
-        <Point
-          id={4}
-          x={0.5}
-          y={0.7}
-          buttonPos="below"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowDown />}
-          divergentIcon={<IconArrowNarrowUp />}
-          gradient={{ from: "DarkGreen", to: "LightGreen", deg: 180 }}
-        />
-        <Point
-          id={5}
-          x={0.45}
-          y={0.3}
-          buttonPos="below"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowUp />}
-          divergentIcon={<IconArrowNarrowDown />}
-          gradient={{ from: "DarkGreen", to: "LightGreen", deg: 180 }}
-        />
-        <Point
-          id={6}
-          x={0.35}
-          y={0.4}
-          buttonPos="above"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowDown />}
-          divergentIcon={<IconArrowNarrowLeft />}
-          gradient={{ from: "DarkGreen", to: "LightGreen", deg: 180 }}
-        />
-        <Point
-          id={7}
-          x={0.75}
-          y={0.4}
-          buttonPos="left"
-          width={width}
-          height={height}
-          straightIcon={<IconArrowNarrowLeft />}
-          divergentIcon={<IconArrowNarrowRight />}
-          gradient={{ from: "Blue", to: "DarkBlue", deg: 90 }}
-        />
-
         <Track
           x1={0.35}
           x2={0.7}
@@ -328,6 +247,102 @@ const Layout = () => {
           width={width}
           height={height}
           colour="BRANCH"
+        />
+        <Point
+          id={0}
+          x={0.25}
+          y={0.1}
+          buttonPos="below"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowDown />}
+          divergentIcon={<IconArrowNarrowUp />}
+          gradient={{ from: "IndianRed", to: "DarkRed", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={1}
+          x={0.4}
+          y={0.8}
+          buttonPos="below"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowUp />}
+          divergentIcon={<IconArrowNarrowDown />}
+          gradient={{ from: "red", to: "blue", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={2}
+          x={0.5}
+          y={0.8}
+          buttonPos="below"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowDown />}
+          divergentIcon={<IconArrowNarrowUp />}
+          gradient={{ from: "green", to: "red", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={3}
+          x={0.4}
+          y={0.7}
+          buttonPos="below"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowUp />}
+          divergentIcon={<IconArrowNarrowDown />}
+          gradient={{ from: "green", to: "red", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={4}
+          x={0.5}
+          y={0.7}
+          buttonPos="below"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowDown />}
+          divergentIcon={<IconArrowNarrowUp />}
+          gradient={{ from: "DarkGreen", to: "LightGreen", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={5}
+          x={0.45}
+          y={0.3}
+          buttonPos="below"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowUp />}
+          divergentIcon={<IconArrowNarrowDown />}
+          gradient={{ from: "DarkGreen", to: "LightGreen", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={6}
+          x={0.35}
+          y={0.4}
+          buttonPos="above"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowDown />}
+          divergentIcon={<IconArrowNarrowLeft />}
+          gradient={{ from: "DarkGreen", to: "LightGreen", deg: 180 }}
+          portalTarget={container}
+        />
+        <Point
+          id={7}
+          x={0.75}
+          y={0.4}
+          buttonPos="left"
+          width={width}
+          height={height}
+          straightIcon={<IconArrowNarrowLeft />}
+          divergentIcon={<IconArrowNarrowRight />}
+          gradient={{ from: "Blue", to: "DarkBlue", deg: 90 }}
+          portalTarget={container}
         />
       </svg>
     </Box>

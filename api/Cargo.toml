@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = { version = "0.8.8", features = ["ws", "tracing", "macros"]}
+axum = { version = "=0.7.9", features = ["ws", "tracing", "macros"]}
+axum-server = { version = "=0.6.0", features = ["tls-rustls"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yml = "0.0.12"
@@ -13,5 +14,6 @@ tracing = "0.1"
 pwm-pca9685 = "0.1"
 linux-embedded-hal = "0.3"
 embedded-hal = "0.2.3"
-tower-http = {version="0.6.8", features=["fs"]}
+tower-http = {version="0.5", features=["fs", "set-status"]}
 tower = {version="0.5.2", features=["util"]}
+hyper = "=1.4.1"

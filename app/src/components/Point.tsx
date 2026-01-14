@@ -1,4 +1,4 @@
-import { ActionIcon, Tooltip, type MantineGradient } from "@mantine/core";
+import { ActionIcon, Portal, type MantineGradient } from "@mantine/core";
 import { IconExclamationMark, IconLoader } from "@tabler/icons-react";
 import { type ReactElement } from "react";
 import useSWR from "swr";
@@ -10,6 +10,7 @@ interface PointProps {
   width: number;
   height: number;
   id: number;
+  portalTarget: HTMLDivElement | null;
   straightIcon: ReactElement;
   divergentIcon: ReactElement;
   gradient?: MantineGradient;
@@ -37,6 +38,7 @@ const Point = ({
   id,
   straightIcon,
   divergentIcon,
+  portalTarget,
   gradient,
 }: PointProps) => {
   const fetcher = ({
@@ -53,11 +55,15 @@ const Point = ({
     },
     fetcher,
   );
+  const offset = 35;
 
-  const xButton =
-    buttonPos == "left" ? x - 0.02 : buttonPos == "right" ? x + 0.02 : x;
-  const yButton =
-    buttonPos == "above" ? y - 0.04 : buttonPos == "below" ? y + 0.04 : y;
+  const xOffset =
+    buttonPos === "left" ? -offset : buttonPos === "right" ? offset : 0;
+  const yOffset =
+    buttonPos === "above" ? -offset : buttonPos === "below" ? offset : 0;
+
+  const htmlX = x * width + xOffset;
+  const htmlY = y * height + yOffset;
   return (
     <>
       <circle
@@ -68,36 +74,51 @@ const Point = ({
         fill="none"
         stroke="white"
       />
-      <foreignObject
-        x={xButton * width - 15}
-        y={yButton * height - 15}
-        width={40}
-        height={40}
-      >
-        <Tooltip label={`ID ${id}`}>
-          <ActionIcon
-            variant="gradient"
-            size="md"
-            gradient={gradient ?? { from: "blue", to: "cyan", deg: 90 }}
-            disabled={isLoading || error}
-            onClick={async () => {
-              if (data) {
-                await mutate(
-                  updatePoint("/api/point", {
-                    id,
-                    is_straight: !data?.is_straight,
-                  }),
-                );
-              }
+      {portalTarget && (
+        <Portal target={portalTarget}>
+          <div
+            style={{
+              position: "absolute",
+              left: `${htmlX}px`,
+              top: `${htmlY}px`,
+              transform: "translate(-50%, -50%)", // Center the button on the point
+              zIndex: 100,
+              pointerEvents: "auto", // Ensure clicks work
             }}
           >
-            {error && <IconExclamationMark />}
-            {isLoading && <IconLoader />}
-            {!error && !isLoading && data && data.is_straight && straightIcon}
-            {!error && !isLoading && data && !data.is_straight && divergentIcon}
-          </ActionIcon>
-        </Tooltip>
-      </foreignObject>
+            <ActionIcon
+              variant="gradient"
+              size="md"
+              gradient={gradient ?? { from: "blue", to: "cyan", deg: 90 }}
+              disabled={isLoading || error}
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (data) {
+                  await mutate(
+                    updatePoint("/api/point", {
+                      id,
+                      is_straight: !data?.is_straight,
+                    }),
+                  );
+                }
+              }}
+            >
+              {error && <IconExclamationMark />}
+              {isLoading && <IconLoader />}
+              {!error && !isLoading && data && (
+                <>
+                  <div style={{ display: data.is_straight ? "flex" : "none" }}>
+                    {straightIcon}
+                  </div>
+                  <div style={{ display: !data.is_straight ? "flex" : "none" }}>
+                    {divergentIcon}
+                  </div>
+                </>
+              )}
+            </ActionIcon>
+          </div>
+        </Portal>
+      )}
     </>
   );
 };

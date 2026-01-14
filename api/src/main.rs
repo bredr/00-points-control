@@ -1,21 +1,26 @@
 use axum::{
     Router,
+    extract::Host,
+    http::Uri,
+    response::Redirect,
     routing::{get, put},
 };
+use axum_server::tls_rustls::RustlsConfig;
 use linux_embedded_hal::I2cdev;
 use pwm_pca9685::{Pca9685, SlaveAddr};
 use std::{
+    env,
+    net::SocketAddr,
     path::Path,
     sync::{Arc, Mutex},
 };
-use tokio::net::TcpListener;
+// Removed duplicate TcpListener and ServiceExt imports
 use tower_http::services::{ServeDir, ServeFile};
 
 mod config;
 mod router;
 use crate::router::state;
 use crate::router::{handlers, servo::ServoControl};
-use std::env;
 
 #[tokio::main]
 async fn main() {
@@ -62,12 +67,15 @@ async fn main() {
         point_state.set_point(id.clone(), is_straight.clone());
     }
 
-    let serve_dir = ServeDir::new("dist").not_found_service(ServeFile::new("dist/index.html"));
+    let serve_dir = ServeDir::new("dist")
+        .append_index_html_on_directories(true)
+        .not_found_service(ServeFile::new("dist/index.html"));
+
     let app = Router::new()
         .route("/api/points", get(handlers::get_points_state))
         .route("/api/point", put(handlers::put_point_state))
         .route("/api/point/manual", put(handlers::put_point_manual_state))
-        .route("/api/point/{id}", get(handlers::get_point_state))
+        .route("/api/point/:id", get(handlers::get_point_state))
         .fallback_service(serve_dir)
         .with_state(state::AppState {
             point_state,
@@ -75,14 +83,34 @@ async fn main() {
             config: loaded_config.to_lookup(),
         });
 
-    let port = match std::env::var("PORT") {
-        Ok(port) => port,
-        Err(_) => "3000".to_string(),
-    };
+    // 3. Load HTTPS Certificates
+    // Replace "certs/cert.pem" and "certs/key.pem" with your actual paths
+    let tls_config = RustlsConfig::from_pem_file("certs/cert.pem", "certs/key.pem")
+        .await
+        .expect("Failed to load TLS certificates");
 
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
+    // 4. Spawn the HTTP to HTTPS Redirect Server
+    tokio::spawn(redirect_http_to_https());
+
+    // 5. Start the HTTPS Server
+    let addr = "[::]:443".parse::<SocketAddr>().unwrap();
+    tracing::info!("HTTPS server running on {}", addr);
+
+    axum_server::bind_rustls(addr, tls_config)
+        .serve(app.into_make_service())
         .await
         .unwrap();
-    tracing::info!("Server running on http://localhost:{}", port);
-    axum::serve(listener, app).await.unwrap();
+}
+
+async fn redirect_http_to_https() {
+    let app = Router::new().fallback(|Host(host): Host, uri: Uri| async move {
+        let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("");
+        let https_uri = format!("https://{}{}", host, path);
+        Redirect::permanent(&https_uri)
+    });
+    let addr = "[::]:80".parse::<SocketAddr>().unwrap();
+    tracing::info!("HTTP redirect server running on {}", addr);
+    axum::serve(tokio::net::TcpListener::bind(addr).await.unwrap(), app)
+        .await
+        .unwrap();
 }
