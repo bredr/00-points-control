@@ -26,16 +26,16 @@ points:
       default: 110.0
   - id: 5
     angles:
-      straight: 60.0
+      straight: 50.0
       diverging: 110.0
-      default: 60.0
+      default: 50.0
   - id: 6
     angles:
-      straight: 110.0
+      straight: 120.0
       diverging: 50.0
       default: 50.0
   - id: 7
     angles:
-      straight: 90.0
-      diverging: 20.0
-      default: 90.0
+      straight: 120.0
+      diverging: 60.0
+      default: 120.0
